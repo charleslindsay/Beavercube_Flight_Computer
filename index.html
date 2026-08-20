@@ -699,9 +699,11 @@
     <a class="rail-item" href="#objectives">Mission Overview</a>
     <a class="rail-item" href="#features">Specifications</a>
     <a class="rail-item" href="#challenges">Design Challenges</a>
+    <a class="rail-item" href="#testing">Testing</a>
     <a class="rail-item" href="#schematic">Schematic</a>
     <a class="rail-item" href="#block-diagram">Block Diagram</a>
     <a class="rail-item" href="#render">3D Render</a>
+    <a class="rail-item" href="#paper">SmallSat Paper</a>
     <a class="rail-item" href="#resources">Project Files</a>
   </div>
 </nav>
@@ -871,9 +873,36 @@
     </div>
   </section>
 
-  <section id="schematic">
+  <section id="testing">
     <div class="section-head">
       <span class="section-num">05</span>
+      <h2>Testing</h2>
+    </div>
+    <div class="section-rule"></div>
+    <div class="assembly-stack">
+      <div class="assembly-frame">
+        <img src="electronics_bench_setup.jpg" alt="Electronics bench setup for BeaverCube Flight Computer testing">
+      </div>
+      <div class="assembly-frame">
+        <img src="analog_scope_test.jpg" alt="Analog oscilloscope test of BeaverCube Flight Computer power rail">
+      </div>
+    </div>
+    <p class="section-intro" style="margin-top:20px;">Initial board checkout evaluating voltage ripple on the main power rail. Power resistors simulate passive loading. An Iwatsu SS-6122 100 MHz analog oscilloscope is used with probe input set to AC coupling.</p>
+
+    <div class="assembly-stack" style="margin-top:40px;">
+      <div class="assembly-frame">
+        <img src="pcb_logic_analyzer_test.jpg" alt="Logic analyzer test of BeaverCube Flight Computer prototype board">
+      </div>
+      <div class="assembly-frame">
+        <img src="pcb_rework.jpg" alt="PCB rework on BeaverCube Flight Computer prototype board">
+      </div>
+    </div>
+    <p class="section-intro" style="margin-top:20px;">Logic analyzer test diagnosed missing USB net connections. PCB re-work involved cutting traces on the prototype board and soldering thin wires to pads about 0402 size.</p>
+  </section>
+
+  <section id="schematic">
+    <div class="section-head">
+      <span class="section-num">06</span>
       <h2>Schematic</h2>
     </div>
     <div class="section-rule"></div>
@@ -891,7 +920,7 @@
 
   <section id="block-diagram">
     <div class="section-head">
-      <span class="section-num">06</span>
+      <span class="section-num">07</span>
       <h2>Hardware Block Diagram</h2>
     </div>
     <div class="section-rule"></div>
@@ -906,7 +935,7 @@
 
   <section id="render">
     <div class="section-head">
-      <span class="section-num">07</span>
+      <span class="section-num">08</span>
       <h2>3D Render</h2>
     </div>
     <div class="section-rule"></div>
@@ -932,9 +961,23 @@
     </div>
   </section>
 
+  <section id="paper">
+    <div class="section-head">
+      <span class="section-num">09</span>
+      <h2>SmallSat Conference Paper</h2>
+    </div>
+    <div class="section-rule"></div>
+    <div class="res-grid" style="grid-template-columns: 1fr;">
+      <a class="res-item" href="Open_Source_Flight_Computer_C_Lindsay_E_Sit.pdf" target="_blank" rel="noopener">
+        <span class="rk">Open-Source Flight Computer Platform for CubeSats</span>
+        <span class="rv">Open_Source_Flight_Computer_C_Lindsay_E_Sit.pdf</span>
+      </a>
+    </div>
+  </section>
+
   <section id="resources">
     <div class="section-head">
-      <span class="section-num">08</span>
+      <span class="section-num">10</span>
       <h2>Project Files</h2>
     </div>
     <div class="section-rule"></div>
