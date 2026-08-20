@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BeaverCube Flight Computer — Open-Source Flight Computer Platform for CubeSats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root {
+    --bg: #0B0F1A;
+    --bg-raised: #131A2C;
+    --line: #202840;
+    --line-bright: #35406A;
+    --accent: #7FE0A8;
+    --accent-dim: #5FBF8C;
+    --signal: #E8A33D;
+    --text: #E7E9F0;
+    --text-dim: #9BA3BD;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.6;
+  }
+
+  ::selection { background: var(--accent-dim); color: var(--bg); }
+
+  /* ---------- Background grid texture ---------- */
+  .grid-backdrop {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.25;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .grid-backdrop::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(1px 1px at 20% 30%, rgba(231,233,240,0.5), transparent),
+      radial-gradient(1px 1px at 70% 10%, rgba(231,233,240,0.4), transparent),
+      radial-gradient(1px 1px at 40% 70%, rgba(231,233,240,0.35), transparent),
+      radial-gradient(1px 1px at 85% 55%, rgba(231,233,240,0.45), transparent),
+      radial-gradient(1px 1px at 10% 85%, rgba(231,233,240,0.3), transparent),
+      radial-gradient(1px 1px at 60% 45%, rgba(231,233,240,0.4), transparent),
+      radial-gradient(1px 1px at 92% 80%, rgba(231,233,240,0.35), transparent);
+    background-repeat: no-repeat;
+  }
+
+  /* ---------- Side rail nav ---------- */
+  .rail {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 220px;
+    padding: 40px 0 40px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .rail-track {
+    position: relative;
+    padding-left: 20px;
+  }
+
+  .rail-track::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 1px;
+    background: var(--line-bright);
+  }
+
+  .rail-item {
+    position: relative;
+    display: block;
+    padding: 10px 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .rail-item::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--line-bright);
+    transition: all 0.2s ease;
+  }
+
+  .rail-item:hover,
+  .rail-item.active {
+    color: var(--accent);
+  }
+
+  .rail-item:hover::before,
+  .rail-item.active::before {
+    border-color: var(--accent);
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  @media (max-width: 900px) {
+    .rail { display: none; }
+  }
+
+  /* ---------- Main content ---------- */
+  main {
+    position: relative;
+    z-index: 1;
+    margin-left: 220px;
+    max-width: 900px;
+    padding: 0 48px 120px;
+  }
+
+  @media (max-width: 900px) {
+    main { margin-left: 0; padding: 0 24px 80px; }
+  }
+
+  section { scroll-margin-top: 40px; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    min-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: 60px;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    color: var(--signal);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--signal);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--signal);
+  }
+
+  .hero h1 {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: clamp(2.2rem, 5.5vw, 4rem);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    max-width: 16ch;
+  }
+
+  .hero h1 span { color: var(--accent); }
+
+  .hero-sub {
+    margin-top: 24px;
+    font-size: 1.15rem;
+    color: var(--text-dim);
+    max-width: 48ch;
+  }
+
+  .hero-note {
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--accent-dim);
+    max-width: 52ch;
+  }
+
+  .hero-author {
+    margin-top: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--signal);
+    max-width: 52ch;
+  }
+
+  .hero-author a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .hero-author a:hover {
+    text-decoration: underline;
+  }
+
+  .hero-meta {
+    margin-top: 48px;
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--line);
+    padding-top: 24px;
+  }
+
+  .hero-meta-item .k {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .hero-meta-item .v {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+  }
+
+  /* ---------- Section headers ---------- */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 8px;
+    padding-top: 96px;
+  }
+
+  .section-num {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent-dim);
+  }
+
+  .section-head h2 {
+    font-family: var(--mono);
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .section-rule {
+    height: 1px;
+    background: linear-gradient(90deg, var(--line-bright), transparent);
+    margin: 20px 0 40px;
+  }
+
+  .section-intro {
+    color: var(--text-dim);
+    max-width: 60ch;
+    margin-bottom: 8px;
+  }
+
+  /* ---------- Readme / prose panel ---------- */
+  .readme-body {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 32px 36px;
+  }
+
+  .readme-body p { margin-bottom: 16px; color: var(--text); }
+  .readme-body p:last-child { margin-bottom: 0; }
+
+  /* ---------- Features / spec list ---------- */
+  .spec-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+
+  .spec-grid-2x2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 720px) {
+    .spec-grid { grid-template-columns: 1fr; }
+  }
+
+  .spec-group {
+    margin-bottom: 28px;
+  }
+
+  .spec-grid .spec-group {
+    margin-bottom: 0;
+  }
+
+  .spec-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .spec-group-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .spec-list {
+    list-style: none;
+  }
+
+  .spec-list li {
+    position: relative;
+    padding-left: 20px;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  .spec-list li:last-child {
+    margin-bottom: 0;
+  }
+
+  .spec-list li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--accent-dim);
+    font-family: var(--mono);
+  }
+
+  .spec-sublist {
+    list-style: none;
+    margin-top: 8px;
+  }
+
+  .spec-sublist li {
+    padding-left: 18px;
+    color: var(--text-dim);
+    font-size: 0.92rem;
+    margin-bottom: 6px;
+  }
+
+  .spec-sublist li::before {
+    content: '–';
+    color: var(--line-bright);
+  }
+
+  /* ---------- Scrolling document viewer (schematic) ---------- */
+  .doc-scroll-full {
+    width: 100%;
+    height: 900px;
+  }
+
+  .doc-scroll {
+    height: 780px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-bright) var(--bg-raised);
+  }
+
+  .doc-scroll::-webkit-scrollbar { width: 8px; }
+  .doc-scroll::-webkit-scrollbar-track { background: var(--bg-raised); }
+  .doc-scroll::-webkit-scrollbar-thumb { background: var(--line-bright); border-radius: 4px; }
+
+  .doc-scroll-inner {
+    padding: 16px;
+  }
+
+  .doc-scroll object,
+  .doc-scroll img {
+    width: 100%;
+    display: block;
+  }
+
+  .doc-scroll-hint {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--accent);
+    padding: 6px 12px;
+    text-align: center;
+  }
+
+  .doc-fallback {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+
+  .doc-fallback a { color: var(--accent); }
+
+  .pdf-loading {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+
+  .pdf-page-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-bottom: 12px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: #fff;
+  }
+
+  .pdf-page-canvas:last-child { margin-bottom: 0; }
+
+  /* ---------- 3D render (two stacked images) ---------- */
+  .render-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .render-frame {
+    position: relative;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .render-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.4);
+    pointer-events: none;
+  }
+
+  .render-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .render-caption {
+    margin-top: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .render-caption .full-size-link {
+    font-size: 14px;
+  }
+
+  /* ---------- Prototype (assembly photos, stacked) ---------- */
+  .assembly-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .assembly-frame {
+    position: relative;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .assembly-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* ---------- Standalone framed photo ---------- */
+  .photo-frame {
+    position: relative;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    width: 100%;
+    margin: 48px 0;
+  }
+
+  .photo-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* ---------- Design challenge blocks ---------- */
+  .challenge-block {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+  }
+
+  .challenge-block:last-child {
+    margin-bottom: 0;
+  }
+
+  .challenge-label {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .challenge-label::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .challenge-constraint .challenge-label { color: var(--text-dim); }
+  .challenge-constraint .challenge-label::before { background: var(--text-dim); }
+
+  .challenge-problem .challenge-label { color: var(--signal); }
+  .challenge-problem .challenge-label::before {
+    background: var(--signal);
+    box-shadow: 0 0 8px var(--signal);
+  }
+
+  .challenge-solution .challenge-label { color: var(--accent); }
+  .challenge-solution .challenge-label::before {
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .challenge-block p {
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+
+  .challenge-block p:last-child { margin-bottom: 0; }
+
+  .challenge-block ul {
+    list-style: none;
+  }
+
+  .challenge-block ul li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  .challenge-block ul li:last-child { margin-bottom: 0; }
+
+  .challenge-block ul li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    font-family: var(--mono);
+    color: var(--accent-dim);
+  }
+
+  /* ---------- Downloads / resources section ---------- */
+  .res-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  @media (max-width: 640px) {
+    .res-grid { grid-template-columns: 1fr; }
+  }
+
+  .res-item {
+    background: var(--bg-raised);
+    padding: 22px 20px;
+    text-decoration: none;
+    color: var(--text);
+    display: block;
+    transition: background 0.15s ease;
+  }
+
+  .res-item:hover { background: #161C30; }
+
+  .res-item .rk {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .res-item .rv {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+  }
+
+  .res-item .rv::after {
+    content: ' →';
+  }
+
+  /* ---------- Footer ---------- */
+  footer {
+    margin-top: 120px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  footer a { color: var(--text-dim); }
+  footer a:hover { color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-backdrop"></div>
+
+<nav class="rail" aria-label="Section navigation">
+  <div class="rail-track">
+    <a class="rail-item" href="#prototype">Prototype</a>
+    <a class="rail-item" href="#objectives">Design Requirements</a>
+    <a class="rail-item" href="#features">Specifications</a>
+    <a class="rail-item" href="#challenges">Design Challenges</a>
+    <a class="rail-item" href="#render">3D Render</a>
+    <a class="rail-item" href="#schematic">Schematic</a>
+    <a class="rail-item" href="#resources">Project Files</a>
+  </div>
+</nav>
+
+<main>
+
+  <section class="hero" id="top">
+    <div class="hero-eyebrow">Open-source flight computer platform for CubeSats</div>
+    <h1>BeaverCube <span>Flight Computer</span></h1>
+    <p class="hero-sub">
+      A CubeSat flight computer with novel fault detection, isolation and response (FDIR) system. Supports a high data rate imaging payload plus standardized bus and power interfaces for the BeaverCube 3U CubeSat mission.
+    </p>
+    <p class="hero-note">MIT STAR Lab · Woods Hole Oceanographic Institute · Massachusetts Institute of Technology</p>
+    <p class="hero-author">Charles Lindsay, Ethan Sit — <a href="mailto:chlindsay@ucsd.edu">chlindsay@ucsd.edu</a></p>
+    <div class="hero-meta">
+      <div class="hero-meta-item">
+        <span class="k">Satellite Bus</span>
+        <span class="v">3U CubeSat</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="k">Processor</span>
+        <span class="v">Raspberry Pi (BCM2837B0)</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="k">Mission Life</span>
+        <span class="v">90 days in low Earth orbit (LEO)</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="prototype">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <h2>Prototype</h2>
+    </div>
+    <div class="section-rule"></div>
+    <div class="assembly-stack">
+      <div class="assembly-frame">
+        <img src="bfc_top.jpg" alt="Assembled BeaverCube Flight Computer, top view">
+      </div>
+      <div class="assembly-frame">
+        <img src="bfc_bottom.jpg" alt="Assembled BeaverCube Flight Computer, bottom view">
+      </div>
+    </div>
+  </section>
+
+  <div class="photo-frame">
+    <img src="BFC_assembled_render.png" alt="BeaverCube Flight Computer, assembled render" loading="lazy">
+  </div>
+
+  <section id="objectives">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <h2>Design Requirements</h2>
+    </div>
+    <div class="section-rule"></div>
+    <div class="readme-body">
+      <div class="spec-grid spec-grid-2x2">
+        <div class="spec-group">
+          <div class="spec-group-title">Mission Objectives</div>
+          <ul class="spec-list">
+            <li>Measure and track sea-surface temperature and color through infrared and visual spectrum imaging of coastal environments</li>
+          </ul>
+        </div>
+        <div class="spec-group">
+          <div class="spec-group-title">Mission Requirements</div>
+          <ul class="spec-list">
+            <li>Survive 90 days in low Earth orbit (LEO)</li>
+            <li>Support a primary and backup radio, antenna control board, electrical power system board, thermal control board, attitude control board, GPS, electrospray propulsion module, and imaging payload</li>
+          </ul>
+        </div>
+        <div class="spec-group">
+          <div class="spec-group-title">Communication &amp; Data Handling</div>
+          <ul class="spec-list">
+            <li>Recover autonomously from software faults and non-destructive hardware upsets due to the radiation environment</li>
+            <li>Provide an onboard inertial measurement unit (IMU) and real-time clock (RTC)</li>
+            <li>Provide data storage for payload image storage</li>
+            <li>Run flight software to coordinate systems and data transfer</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <h2>Specifications</h2>
+    </div>
+    <div class="section-rule"></div>
+    <p class="section-intro">BFC Rev 1.0, April 2020.</p>
+    <div class="readme-body">
+      <div class="spec-grid spec-grid-2x2">
+        <div class="spec-group">
+          <div class="spec-group-title">Processor</div>
+          <ul class="spec-list">
+            <li>Raspberry Pi Compute Module 3 Lite
+              <ul class="spec-sublist">
+                <li>BCM2837B0 1.40 GHz processor</li>
+                <li>1 GB LPDDR2 RAM</li>
+                <li>Micro-SD card flash memory</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <div class="spec-group">
+          <div class="spec-group-title">Peripherals</div>
+          <ul class="spec-list">
+            <li>USB 2.0 (x3)</li>
+            <li>RS-485 UART</li>
+            <li>TTL UART (x3)</li>
+            <li>I2C</li>
+          </ul>
+        </div>
+        <div class="spec-group">
+          <div class="spec-group-title">Power</div>
+          <ul class="spec-list">
+            <li>PC/104 connector power bus interface 12V | 5 V | 3.3 V</li>
+          </ul>
+        </div>
+        <div class="spec-group">
+          <div class="spec-group-title">Integrated Sensors</div>
+          <ul class="spec-list">
+            <li>Real-time clock</li>
+            <li>ICM-20948 IMU</li>
+          </ul>
+        </div>
+        <div class="spec-group">
+          <div class="spec-group-title">Redundancy</div>
+          <ul class="spec-list">
+            <li>Dual SD card per compute module</li>
+            <li>Dual onboard regulators</li>
+            <li>Dual onboard IMUs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="challenges">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <h2>Design Challenges</h2>
+    </div>
+    <div class="section-rule"></div>
+
+    <div class="challenge-block challenge-constraint">
+      <div class="challenge-label">Mechanical Constraint</div>
+      <p>Board must sit within the standard 3U CubeSat chassis stack. It will interface with the main power and communications bus through a standardized PC/104 header.</p>
+    </div>
+
+    <div class="challenge-block challenge-problem">
+      <div class="challenge-label">Radiation Problem</div>
+      <ul>
+        <li><strong>Flash memory corruption:</strong> SD card failure can prevent the flight computer from booting flight software.</li>
+        <li><strong>Voltage regulator failure:</strong> DC-DC converters are sensitive to ionizing radiation and can fail unpredictably, cutting power to all systems.</li>
+      </ul>
+    </div>
+
+    <div class="challenge-block challenge-solution">
+      <div class="challenge-label">Solutions</div>
+      <ul>
+        <li><strong>Dual watchdogs:</strong> In the event of a non-destructive single event latch-up that halts the flight computer, both the electrical power system or embedded hardware watchdog can trigger a reboot.</li>
+        <li><strong>Remote reboot:</strong> The primary radio can toggle which compute module is running with a command from ground, regardless of the flight computer's state.</li>
+        <li><strong>FDIR system:</strong> Two Raspberry Pi compute modules connected to four SD cards plus the FDIR system create a single-fault tolerant system that can autonomously recover from unexpected shutdowns.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="render">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <h2>3D Render</h2>
+    </div>
+    <div class="section-rule"></div>
+    <div class="render-stack">
+      <div>
+        <div class="render-frame" id="render-frame-1">
+          <img src="BFC_render_top.png" alt="BeaverCube Flight Computer board render — top" loading="lazy">
+        </div>
+        <div class="render-caption">
+          <span>BFC_render_top.png</span>
+          <span><a class="full-size-link" href="BFC_render_top.png" target="_blank" rel="noopener" style="color:var(--accent-dim);">Open Render →</a></span>
+        </div>
+      </div>
+      <div>
+        <div class="render-frame" id="render-frame-2">
+          <img src="BFC_render_bot.png" alt="BeaverCube Flight Computer board render — bottom" loading="lazy">
+        </div>
+        <div class="render-caption">
+          <span>BFC_render_bot.png</span>
+          <span><a class="full-size-link" href="BFC_render_bot.png" target="_blank" rel="noopener" style="color:var(--accent-dim);">Open Render →</a></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="schematic">
+    <div class="section-head">
+      <span class="section-num">06</span>
+      <h2>Schematic</h2>
+    </div>
+    <div class="section-rule"></div>
+    <div class="doc-scroll doc-scroll-full">
+      <div class="doc-scroll-hint">Scroll to view full schematic ↓</div>
+      <div class="doc-scroll-inner" id="schematic-pages">
+        <div class="pdf-loading" data-loading-for="schematic-pages">Loading schematic…</div>
+      </div>
+    </div>
+    <div class="render-caption">
+      <span>BFC_rev1_schematic.pdf</span>
+      <span><a class="full-size-link" href="BFC_rev1_schematic.pdf" target="_blank" rel="noopener" style="color:var(--accent-dim);">Open Schematic →</a></span>
+    </div>
+  </section>
+
+  <section id="resources">
+    <div class="section-head">
+      <span class="section-num">07</span>
+      <h2>Project Files</h2>
+    </div>
+    <div class="section-rule"></div>
+    <div class="res-grid">
+      <a class="res-item" href="https://github.com/MIT-STARLab/BeaverCube_Flight_Computer" target="_blank" rel="noopener">
+        <span class="rk">Open-Source Board Files</span>
+        <span class="rv">MIT-STARLab/BeaverCube_Flight_Computer</span>
+      </a>
+      <a class="res-item" href="BFC_BOM.xlsx" target="_blank" rel="noopener">
+        <span class="rk">Bill of Materials</span>
+        <span class="rv">BFC_BOM.xlsx</span>
+      </a>
+      <a class="res-item" href="BFC_gerber.zip" target="_blank" rel="noopener">
+        <span class="rk">Manufacturing Files</span>
+        <span class="rv">BFC_gerber.zip</span>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <span>BeaverCube Flight Computer — MIT STAR Lab</span>
+    <span>Charles Lindsay, Ethan Sit</span>
+  </footer>
+
+</main>
+
+<script>
+  // ---------- PDF.js rendering ----------
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  async function renderPdfIntoContainer(url, containerId, options = {}) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const { singlePage = false, onlyPage = null, targetWidth = 1400 } = options;
+
+    try {
+      const loadingTask = pdfjsLib.getDocument(url);
+      const pdf = await loadingTask.promise;
+      container.innerHTML = '';
+
+      const startPage = onlyPage || 1;
+      const endPage = onlyPage ? onlyPage : (singlePage ? 1 : pdf.numPages);
+
+      for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const baseViewport = page.getViewport({ scale: 1 });
+        const scale = targetWidth / baseViewport.width;
+        const viewport = page.getViewport({ scale });
+
+        const canvas = document.createElement('canvas');
+        canvas.className = 'pdf-page-canvas';
+        const context = canvas.getContext('2d');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+        container.appendChild(canvas);
+      }
+    } catch (err) {
+      console.error('PDF render failed for', containerId, err);
+      container.innerHTML = `<div class="doc-fallback">
+          Preview unavailable in this browser.<br>
+          <a href="${url}" target="_blank" rel="noopener">Open ${url} →</a>
+        </div>`;
+    }
+  }
+
+  renderPdfIntoContainer('BFC_rev1_schematic.pdf', 'schematic-pages', { targetWidth: 1600 });
+</script>
+
+<script>
+  // Highlight active rail item on scroll
+  const sections = document.querySelectorAll('main section[id]');
+  const railItems = document.querySelectorAll('.rail-item');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const id = entry.target.getAttribute('id');
+      const railItem = document.querySelector(`.rail-item[href="#${id}"]`);
+      if (!railItem) return;
+      if (entry.isIntersecting) {
+        railItems.forEach(i => i.classList.remove('active'));
+        railItem.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -50% 0px', threshold: 0 });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
