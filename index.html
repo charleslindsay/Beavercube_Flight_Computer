@@ -858,7 +858,7 @@
     <div class="challenge-block challenge-problem">
       <div class="challenge-label">Radiation Problem</div>
       <ul>
-        <li><strong>Flash memory corruption:</strong> SD card failure can prevent the flight computer from booting flight software.</li>
+        <li><strong>Flash memory corruption:</strong> SD cards will corrupt while in LEO due to ionizing radiation. This causes unexpected read/write faults, which can prevent the flight computer from booting flight software and running operations.</li>
         <li><strong>Voltage regulator failure:</strong> DC-DC converters are sensitive to ionizing radiation and can fail unpredictably, cutting power to all systems.</li>
       </ul>
     </div>
@@ -866,7 +866,7 @@
     <div class="challenge-block challenge-solution">
       <div class="challenge-label">Solutions</div>
       <ul>
-        <li><strong>Dual watchdogs:</strong> In the event of a non-destructive single event latch-up that halts the flight computer, both the electrical power system or embedded hardware watchdog can trigger a reboot.</li>
+        <li><strong>Dual watchdogs:</strong> In the event of a non-destructive single event latch-up that halts the flight computer, both the external electrical power system board or onboard hardware watchdog can trigger a reboot.</li>
         <li><strong>Remote reboot:</strong> The primary radio can toggle which compute module is running with a command from ground, regardless of the flight computer's state.</li>
         <li><strong>FDIR system:</strong> Two Raspberry Pi compute modules connected to four SD cards plus the FDIR system create a single-fault tolerant system that can autonomously recover from unexpected shutdowns.</li>
       </ul>
@@ -897,7 +897,7 @@
         <img src="pcb_rework_3.jpg" alt="PCB rework on BeaverCube Flight Computer prototype board">
       </div>
     </div>
-    <p class="section-intro" style="margin-top:20px;">Logic analyzer test diagnosed missing USB net connections. PCB re-work involved cutting traces on the prototype board and soldering thin wires to pads about 0402 size.</p>
+    <p class="section-intro" style="margin-top:20px;">Logic analyzer test diagnosed missing USB net connections. PCB re-work involved cutting traces on the prototype board and soldering thin wires to pads smaller than an 0402 footprint.</p>
   </section>
 
   <section id="schematic">
