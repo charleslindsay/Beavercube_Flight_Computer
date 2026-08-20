@@ -229,11 +229,36 @@
 
   .hero-meta {
     margin-top: 48px;
-    display: flex;
-    gap: 40px;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 30% 1fr;
+    gap: 32px;
+    align-items: center;
     border-top: 1px solid var(--line);
     padding-top: 24px;
+  }
+
+  .hero-meta-image {
+    width: 100%;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .hero-meta-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .hero-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  @media (max-width: 640px) {
+    .hero-meta { grid-template-columns: 1fr; }
   }
 
   .hero-meta-item .k {
@@ -497,11 +522,15 @@
     font-size: 14px;
   }
 
-  /* ---------- Prototype (assembly photos, stacked) ---------- */
+  /* ---------- Prototype (assembly photos, side by side) ---------- */
   .assembly-stack {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 24px;
+  }
+
+  @media (max-width: 720px) {
+    .assembly-stack { grid-template-columns: 1fr; }
   }
 
   .assembly-frame {
@@ -513,23 +542,6 @@
   }
 
   .assembly-frame img {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
-  /* ---------- Standalone framed photo ---------- */
-  .photo-frame {
-    position: relative;
-    background: var(--bg-raised);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    overflow: hidden;
-    width: 100%;
-    margin: 48px 0;
-  }
-
-  .photo-frame img {
     display: block;
     width: 100%;
     height: auto;
@@ -684,7 +696,7 @@
 <nav class="rail" aria-label="Section navigation">
   <div class="rail-track">
     <a class="rail-item" href="#prototype">Prototype</a>
-    <a class="rail-item" href="#objectives">Design Requirements</a>
+    <a class="rail-item" href="#objectives">Mission Overview</a>
     <a class="rail-item" href="#features">Specifications</a>
     <a class="rail-item" href="#challenges">Design Challenges</a>
     <a class="rail-item" href="#render">3D Render</a>
@@ -704,17 +716,22 @@
     <p class="hero-note">MIT STAR Lab · Woods Hole Oceanographic Institute · Massachusetts Institute of Technology</p>
     <p class="hero-author">Charles Lindsay, Ethan Sit — <a href="mailto:chlindsay@ucsd.edu">chlindsay@ucsd.edu</a></p>
     <div class="hero-meta">
-      <div class="hero-meta-item">
-        <span class="k">Satellite Bus</span>
-        <span class="v">3U CubeSat</span>
+      <div class="hero-meta-image">
+        <img src="BFC_assembled_render.png" alt="BeaverCube Flight Computer, assembled render" loading="lazy">
       </div>
-      <div class="hero-meta-item">
-        <span class="k">Processor</span>
-        <span class="v">Raspberry Pi (BCM2837B0)</span>
-      </div>
-      <div class="hero-meta-item">
-        <span class="k">Mission Life</span>
-        <span class="v">90 days in low Earth orbit (LEO)</span>
+      <div class="hero-meta-list">
+        <div class="hero-meta-item">
+          <span class="k">Satellite Bus</span>
+          <span class="v">3U CubeSat</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="k">Processor</span>
+          <span class="v">Raspberry Pi (BCM2837B0)</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="k">Mission Life</span>
+          <span class="v">90 days in low Earth orbit (LEO)</span>
+        </div>
       </div>
     </div>
   </section>
@@ -735,35 +752,31 @@
     </div>
   </section>
 
-  <div class="photo-frame">
-    <img src="BFC_assembled_render.png" alt="BeaverCube Flight Computer, assembled render" loading="lazy">
-  </div>
-
   <section id="objectives">
     <div class="section-head">
       <span class="section-num">02</span>
-      <h2>Design Requirements</h2>
+      <h2>Mission Overview</h2>
     </div>
     <div class="section-rule"></div>
     <div class="readme-body">
       <div class="spec-grid spec-grid-2x2">
         <div class="spec-group">
-          <div class="spec-group-title">Mission Objectives</div>
+          <div class="spec-group-title">Objective</div>
           <ul class="spec-list">
             <li>Measure and track sea-surface temperature and color through infrared and visual spectrum imaging of coastal environments</li>
           </ul>
         </div>
         <div class="spec-group">
-          <div class="spec-group-title">Mission Requirements</div>
+          <div class="spec-group-title">CubeSat Requirements</div>
           <ul class="spec-list">
             <li>Survive 90 days in low Earth orbit (LEO)</li>
-            <li>Support a primary and backup radio, antenna control board, electrical power system board, thermal control board, attitude control board, GPS, electrospray propulsion module, and imaging payload</li>
+            <li>Support a primary and backup radio, antenna control board, electrical power system board, thermal control board, attitude control board, GPS, electrospray propulsion module and imaging payload</li>
           </ul>
         </div>
         <div class="spec-group">
           <div class="spec-group-title">Communication &amp; Data Handling</div>
           <ul class="spec-list">
-            <li>Recover autonomously from software faults and non-destructive hardware upsets due to the radiation environment</li>
+            <li>Recover autonomously from software faults and non-destructive hardware upsets from ionizing radiation impact</li>
             <li>Provide an onboard inertial measurement unit (IMU) and real-time clock (RTC)</li>
             <li>Provide data storage for payload image storage</li>
             <li>Run flight software to coordinate systems and data transfer</li>
@@ -779,7 +792,6 @@
       <h2>Specifications</h2>
     </div>
     <div class="section-rule"></div>
-    <p class="section-intro">BFC Rev 1.0, April 2020.</p>
     <div class="readme-body">
       <div class="spec-grid spec-grid-2x2">
         <div class="spec-group">
